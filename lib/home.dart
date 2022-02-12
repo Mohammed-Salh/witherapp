@@ -1,4 +1,10 @@
+import 'dart:collection';
+import 'package:location/location.dart';
+import 'package:witherapp/mylocation.dart';
 import "package:flutter/material.dart";
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class HomeScrean extends StatefulWidget {
   HomeScrean({Key? key}) : super(key: key);
@@ -8,6 +14,25 @@ class HomeScrean extends StatefulWidget {
 }
 
 class _HomeScreanState extends State<HomeScrean> {
+  //
+  var temp;
+  var description;
+  var currently;
+  var humidity;
+  var windSpeed;
+  final _APIKEY = "7e2fa67a5584eda8299f635a98c41731";
+  String _lat = "lat";
+  String _lon = "lon";
+  //
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getmylocation();
+  }
+
+  //
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,6 +43,8 @@ class _HomeScreanState extends State<HomeScrean> {
             width: MediaQuery.of(context).size.width,
             color: Colors.red,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.only(
@@ -33,7 +60,7 @@ class _HomeScreanState extends State<HomeScrean> {
                   ),
                 ),
                 Text(
-                  "52\u0000",
+                  "$temp",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 40.0,
@@ -55,9 +82,81 @@ class _HomeScreanState extends State<HomeScrean> {
                 ),
               ],
             ),
-          )
+          ),
+          Expanded(
+              child: Padding(
+            padding: EdgeInsets.all(
+              20.0,
+            ),
+            child: ListView(children: <Widget>[
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.thermometerHalf),
+                title: Text("Tempareture"),
+                trailing: Text("$temp"),
+              ),
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.cloud),
+                title: Text("weather"),
+                trailing: Text("$description"),
+              ),
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.sun),
+                title: Text("Humedity"),
+                trailing: Text("$humidity"),
+              ),
+              ListTile(
+                leading: FaIcon(FontAwesomeIcons.wind),
+                title: Text("wind"),
+                trailing: Text("$windSpeed"),
+              )
+            ]),
+          ))
         ],
       ),
     );
+  }
+
+  Future getWeather() async {
+    var URL = Uri.parse(
+        "https://api.openweathermap.org/data/2.5/weather?$_lat&$_lon&appid=$_APIKEY");
+    http.Response response = await http.get(URL);
+    var Results = jsonDecode(response.body);
+    setState(() {
+      this.temp = Results["main"]["temp"];
+      this.description = Results["weather"][0]["description"];
+      this.currently = Results["weather"][0]["main"];
+      this.humidity = Results["main"]["humidity"];
+      this.windSpeed = Results["wind"]["speed"];
+    });
+  }
+
+  Future getmylocation() async {
+    Location location = Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+    LocationData _locationData;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    this._lat = _lat + "=" + _locationData.latitude.toString();
+    this._lon = _lon + "=" + _locationData.longitude.toString();
+
+    getWeather();
   }
 }
