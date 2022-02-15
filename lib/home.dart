@@ -1,13 +1,14 @@
-import 'dart:collection';
+import 'dart:developer';
+
 import 'package:location/location.dart';
-import 'package:witherapp/mylocation.dart';
+import 'package:witherapp/my_location.dart';
 import "package:flutter/material.dart";
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class HomeScrean extends StatefulWidget {
-  HomeScrean({Key? key}) : super(key: key);
+  const HomeScrean({Key? key}) : super(key: key);
 
   @override
   State<HomeScrean> createState() => _HomeScreanState();
@@ -21,15 +22,15 @@ class _HomeScreanState extends State<HomeScrean> {
   var humidity;
   var windSpeed;
   final _APIKEY = "7e2fa67a5584eda8299f635a98c41731";
-  String _lat = "lat";
-  String _lon = "lon";
+  late String _lat;
+  late String _lon;
   //
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getmylocation();
+    getlocation();
   }
 
   //
@@ -51,7 +52,7 @@ class _HomeScreanState extends State<HomeScrean> {
                     bottom: 10.0,
                   ),
                   child: Text(
-                    "Currently in Tripoli",
+                    "currently in Tiji",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14.0,
@@ -118,7 +119,7 @@ class _HomeScreanState extends State<HomeScrean> {
 
   Future getWeather() async {
     var URL = Uri.parse(
-        "https://api.openweathermap.org/data/2.5/weather?$_lat&$_lon&appid=$_APIKEY");
+        "https://api.openweathermap.org/data/2.5/weather?lat=$_lat&lon=$_lon&appid=$_APIKEY");
     http.Response response = await http.get(URL);
     var Results = jsonDecode(response.body);
     setState(() {
@@ -130,33 +131,16 @@ class _HomeScreanState extends State<HomeScrean> {
     });
   }
 
-  Future getmylocation() async {
-    Location location = Location();
-
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
-    LocationData _locationData;
-
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
+  void getlocation() async {
+    final service = MyLocation();
+    final locationData = await service.getlocation();
+    //
+    //
+    if (locationData != null) {
+      setState(() {
+        _lat = locationData.latitude!.toStringAsFixed(2);
+        _lon = locationData.longitude!.toStringAsFixed(2);
+      });
     }
-
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    _locationData = await location.getLocation();
-    this._lat = _lat + "=" + _locationData.latitude.toString();
-    this._lon = _lon + "=" + _locationData.longitude.toString();
-
-    getWeather();
   }
 }
