@@ -18,10 +18,11 @@ class HomeScrean extends StatefulWidget {
 class _HomeScreanState extends State<HomeScrean> {
   //
   var temp;
-  var description;
+  String description = "";
   var currently;
   var humidity;
   var windSpeed;
+  String asset = "assets/imeges/sun.jpg";
   final _APIKEY = "7e2fa67a5584eda8299f635a98c41731";
   String _lat = "";
   String _lon = "";
@@ -41,9 +42,15 @@ class _HomeScreanState extends State<HomeScrean> {
       body: Column(
         children: [
           Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(asset),
+                fit: BoxFit.cover,
+              ),
+            ),
             height: MediaQuery.of(context).size.height / 3,
             width: MediaQuery.of(context).size.width,
-            color: Colors.red,
+            //color: Colors.red,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -53,7 +60,7 @@ class _HomeScreanState extends State<HomeScrean> {
                     bottom: 10.0,
                   ),
                   child: Text(
-                    "currently in Tiji",
+                    "Tiji",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14.0,
@@ -132,6 +139,11 @@ class _HomeScreanState extends State<HomeScrean> {
       this.humidity = Results["main"]["humidity"];
       this.windSpeed = Results["wind"]["speed"];
     });
+    if (description.contains("cloud")) {
+      asset = "assets/imeges/cloudy.jpg";
+    } else if (description.contains("rain")) {
+      asset = asset = "assets/imeges/rain.jpg";
+    }
   }
 
   void getlocation() async {
