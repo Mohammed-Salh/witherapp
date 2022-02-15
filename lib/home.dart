@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math';
 
 import 'package:location/location.dart';
 import 'package:witherapp/my_location.dart';
@@ -22,8 +23,8 @@ class _HomeScreanState extends State<HomeScrean> {
   var humidity;
   var windSpeed;
   final _APIKEY = "7e2fa67a5584eda8299f635a98c41731";
-  late String _lat;
-  late String _lon;
+  String _lat = "";
+  String _lon = "";
   //
 
   @override
@@ -61,7 +62,7 @@ class _HomeScreanState extends State<HomeScrean> {
                   ),
                 ),
                 Text(
-                  "$temp",
+                  "${temp}",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 40.0,
@@ -73,7 +74,7 @@ class _HomeScreanState extends State<HomeScrean> {
                     top: 10.0,
                   ),
                   child: Text(
-                    "Rain",
+                    "$description",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14.0,
@@ -118,9 +119,11 @@ class _HomeScreanState extends State<HomeScrean> {
   }
 
   Future getWeather() async {
-    var URL = Uri.parse(
-        "https://api.openweathermap.org/data/2.5/weather?lat=$_lat&lon=$_lon&appid=$_APIKEY");
-    http.Response response = await http.get(URL);
+    var url = Uri.parse(
+        "https://api.openweathermap.org/data/2.5/weather?lat=${this._lat}&lon=${this._lon}&units=metric&appid=$_APIKEY");
+    print(this._lat);
+    http.Response response = await http.get(url);
+    print(response.statusCode);
     var Results = jsonDecode(response.body);
     setState(() {
       this.temp = Results["main"]["temp"];
@@ -138,9 +141,10 @@ class _HomeScreanState extends State<HomeScrean> {
     //
     if (locationData != null) {
       setState(() {
-        _lat = locationData.latitude!.toStringAsFixed(2);
-        _lon = locationData.longitude!.toStringAsFixed(2);
+        this._lat = locationData.latitude!.toStringAsFixed(2);
+        this._lon = locationData.longitude!.toStringAsFixed(2);
       });
+      getWeather();
     }
   }
 }
